@@ -1,16 +1,23 @@
-// app/login.tsx
 import { router } from 'expo-router';
 import { getAuth, signInAnonymously } from 'firebase/auth';
+import { useEffect } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { firebaseApp } from '../firebase/config'; // asegúrate de tener este archivo
+import { firebaseApp } from '../firebase/config';
 
 export default function LoginScreen() {
+  useEffect(() => {
+    console.log('[LOGIN] Componente montado');
+  }, []);
+
   const handleAnonymousLogin = async () => {
+    console.log('[LOGIN] Intentando login anónimo...');
     try {
       const auth = getAuth(firebaseApp);
       await signInAnonymously(auth);
-      router.replace('/home'); // redirige a la pantalla principal
+      console.log('[LOGIN] Login exitoso. Redirigiendo a /home');
+      router.replace('/home');
     } catch (error: any) {
+      console.log('[LOGIN] Error en login:', error.message);
       Alert.alert('Error al iniciar sesión', error.message);
     }
   };

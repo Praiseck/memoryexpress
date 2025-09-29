@@ -3,6 +3,16 @@
     "name": "memoryexpress",
     "slug": "memoryexpress",
     "version": "1.0.0",
+    "extra": {
+            "FIREBASE_API_KEY":"AIzaSyCZHUwT0LcsGZYUgKi4tD3lEZ3lYSVMw6I",
+            "FIREBASE_AUTH_DOMAIN":"memoriaapp-b270c.firebaseapp.com",
+            "FIREBASE_PROJECT_ID":"memoriaapp-b270c",
+            "FIREBASE_STORAGE_BUCKET":"memoriaapp-b270c.appspot.com",
+            "FIREBASE_MESSAGING_SENDER_ID":"401077237687",
+            "FIREBASE_APP_ID":"1:401077237687:web:a35857d46b74385ec9da32",
+            "FIREBASE_MEASUREMENT_ID":"G-4HNLB2F7LQ"
+        },
+    "owner": "praiseck",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "memoryexpress",

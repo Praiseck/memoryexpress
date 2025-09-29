@@ -1,15 +1,19 @@
-// app/splash.tsx
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 export default function SplashScreen() {
   useEffect(() => {
+    console.log('[SPLASH] Montado. Esperando 2 segundos...');
     const timer = setTimeout(() => {
+      console.log('[SPLASH] Redirigiendo a /login');
       router.replace('/login');
-    }, 2000); // espera 2 segundos antes de ir al login
+    }, 2000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('[SPLASH] Desmontado');
+      clearTimeout(timer);
+    };
   }, []);
 
   return (
