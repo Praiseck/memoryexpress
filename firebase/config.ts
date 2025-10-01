@@ -1,5 +1,8 @@
 import Constants from 'expo-constants';
 import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+
+
 
 const extra = Constants.expoConfig?.extra ?? {};
 
@@ -13,3 +16,4 @@ const firebaseConfig = {
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);
+export const db = getFirestore(firebaseApp);

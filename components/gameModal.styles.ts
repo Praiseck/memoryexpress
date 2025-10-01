@@ -1,0 +1,55 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  modal: {
+    backgroundColor: '#222',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '85%',
+  },
+  modalText: {
+    color: '#fff',
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    color: '#fff',
+    fontSize: 16,
+    width: '90%',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  endButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '90%',
+    marginTop: 30,
+  },
+  endButton: {
+    backgroundColor: '#555',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    color: '#fff',
+    width: '90%',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+});
