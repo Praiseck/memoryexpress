@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { Animated, Image, Text, View } from 'react-native';
 import { styles } from './homeHeader.styles';
 
 const avatarMap: { [key: string]: any } = {
@@ -15,9 +15,10 @@ interface Props {
   frameFile: string;
   nick: string;
   coins: number;
+  coinsScale: Animated.Value;
 }
 
-export const HomeHeader: React.FC<Props> = ({ avatarFile, frameFile, nick, coins }) => {
+export const HomeHeader: React.FC<Props> = ({ avatarFile, frameFile, nick, coins, coinsScale }) => {
   const avatarSource = avatarMap[avatarFile] ?? avatarMap['avataaars17.png'];
   const frameSource = frameMap[frameFile] ?? frameMap['frame1.png'];
 
@@ -28,7 +29,9 @@ export const HomeHeader: React.FC<Props> = ({ avatarFile, frameFile, nick, coins
         <Image source={avatarSource} style={styles.avatar} />
       </View>
       <Text style={styles.nick}>{nick}</Text>
-      <Text style={styles.coins}>{coins} 🪙</Text>
+      <Animated.Text style={[styles.coins, { transform: [{ scale: coinsScale }] }]}>
+        {coins} 🪙
+      </Animated.Text>
     </View>
   );
 };

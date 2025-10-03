@@ -5,11 +5,11 @@ export const styles = StyleSheet.create({
     backgroundColor: '#2a2a2a',
     padding: 15,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 0,
   },
   label: {
     color: '#fff',
     fontSize: 16,
-    marginBottom: 5,
+    marginBottom: 0,
   },
 });

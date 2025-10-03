@@ -4,8 +4,12 @@ import { Dimensions, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GameHeader } from '../components/gameHeader';
 import { GameModal } from '../components/gameModal';
+import { getProfileLevelFromXP } from '../components/profileLevel';
+import { calculateXP, useProfileLevel } from '../hooks/useProfileLevel';
 import { useUserStats } from '../hooks/useUserStats';
 import { styles } from '../screens/game.styles';
+
+
 
 const emojiPool = ['🐶', '🍎', '🚗', '🐱', '🍌', '⚽', '🎈', '🌟', '🦄'];
 
@@ -15,7 +19,7 @@ const getMemorizeTime = (level: number): number => {
   if (level <= 5) return 5;
   const reductions = Math.floor((level - 6) / 3) + 1;
   const rawTime = 5 - reductions * 0.5;
-  return Math.max(Math.round(rawTime * 10) / 10, 2); // redondea a 1 decimal
+  return Math.max(Math.round(rawTime * 10) / 10, 2);
 };
 
 export default function GameScreen(): React.ReactElement {
@@ -26,12 +30,13 @@ export default function GameScreen(): React.ReactElement {
   const avatarFile = Array.isArray(params.avatar) ? params.avatar[0] : params.avatar ?? 'avataaars17.png';
   const frameFile = Array.isArray(params.frame) ? params.frame[0] : params.frame ?? 'frame1.png';
   const userNick = Array.isArray(params.nick) ? params.nick[0] : params.nick ?? 'Jugador123';
+  const [showLevelUpMessage, setShowLevelUpMessage] = useState(false);
 
   const { stats, updateStats } = useUserStats();
 
-  const [level, setLevel] = useState(stats?.level ?? 1);
-  const [streak, setStreak] = useState(stats?.streak ?? 0);
-  const [coins, setCoins] = useState(stats?.coins ?? 250);
+  const [coins, setCoins] = useState<number | null>(null);
+  const [streak, setStreak] = useState<number | null>(null);
+  const [level, setLevel] = useState<number | null>(null);
   const [earnedThisRound, setEarnedThisRound] = useState(0);
   const [showQuestion, setShowQuestion] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
@@ -40,14 +45,27 @@ export default function GameScreen(): React.ReactElement {
   const [showEndMenu, setShowEndMenu] = useState(false);
   const [showEndOptions, setShowEndOptions] = useState(false);
   const [roundKey, setRoundKey] = useState(0);
+  const [continueAttempts, setContinueAttempts] = useState(0);
+  const [rewardVideoUsed, setRewardVideoUsed] = useState(false);
 
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
 
-  const emojiCount = getEmojiCount(level);
-  const memorizeTime = getMemorizeTime(level);
+  useEffect(() => {
+    if (stats) {
+      setCoins(stats.coins);
+      setStreak(stats.streak);
+      setLevel(stats.level);
+    }
+  }, [stats]);
+
+  const emojiCount = getEmojiCount(level ?? 1);
+  const memorizeTime = getMemorizeTime(level ?? 1);
   const screenWidth = Dimensions.get('window').width;
-  const emojiSize = screenWidth / 5;
+  const emojiSize = emojiCount > 3 ? screenWidth / 6 : screenWidth / 5;
+  const newStreak = (stats?.streak ?? 0) + 1;
+  const newLevel = newStreak % 5 === 0 ? (stats?.level ?? 1) + 1 : stats?.level ?? 1;
+
 
   const sequence = useMemo(() => {
     return emojiPool.sort(() => 0.5 - Math.random()).slice(0, emojiCount);
@@ -77,14 +95,32 @@ export default function GameScreen(): React.ReactElement {
     setIsCorrectAnswer(correct);
 
     if (correct) {
-      const earned = 10 + level * 2;
-      setEarnedThisRound(earned);
-      setLevel(prev => prev + 1);
-      setStreak(prev => prev + 1);
+      const earned = (streak ?? 0) >= 5 ? 5 : 2;
+      setEarnedThisRound(prev => prev + earned);
+      const newStreak = (streak ?? 0) + 1;
+      const newLevel = (level ?? 1) + 1;
+
+      // Detectar si se alcanzó el nivel
+      const progressBefore = (streak ?? 0) % 5;
+      const progressAfter = newStreak % 5;
+      if (progressBefore === 4 && progressAfter === 0) {
+        setShowLevelUpMessage(true);
+        setTimeout(() => setShowLevelUpMessage(false), 2000);
+      }
+
+      setStreak(newStreak);
+      setLevel(newLevel);
+      updateStats({ streak: newStreak, level: newLevel });
       setShowEndOptions(true);
     } else {
-      setHasFailed(true);
-      setShowRewardModal(true);
+      if (continueAttempts >= 2) {
+        setShowRewardModal(false);
+        setShowEndMenu(true);
+        setShowEndOptions(false);
+      } else {
+        setHasFailed(true);
+        setShowRewardModal(true);
+      }
     }
 
     setShowQuestion(true);
@@ -102,6 +138,9 @@ export default function GameScreen(): React.ReactElement {
   };
 
   const handleContinueAd = () => {
+    const nextAttempt = continueAttempts + 1;
+    setContinueAttempts(nextAttempt);
+
     setUsedContinueAd(true);
     setHasFailed(false);
     setShowRewardModal(false);
@@ -114,19 +153,60 @@ export default function GameScreen(): React.ReactElement {
   const handleEndGame = () => {
     setShowRewardModal(false);
     setShowEndMenu(true);
+    setShowEndOptions(false);
   };
 
   const handleDoubleRewardAd = () => {
+    if (rewardVideoUsed || coins === null || stats === null) return;
+
     const total = coins + earnedThisRound * 2;
     setCoins(total);
-    updateStats({ coins: total, totalEarned: (stats?.totalEarned ?? 0) + earnedThisRound * 2, streak: 0, level: 1 });
+
+    const earnedXP = calculateXP({
+      correctAnswers: earnedThisRound * 2,
+      streak: stats.streak,
+      completed: true,
+    });
+
+    const totalXP = stats.xp + earnedXP;
+    const newProfileLevel = useProfileLevel(totalXP).level;
+
+    updateStats({
+      coins: total,
+      totalEarned: stats.totalEarned + earnedThisRound * 2,
+      streak: 0,
+      level: 1,
+      xp: totalXP,
+      profileLevel: newProfileLevel,
+    });
+
+    setRewardVideoUsed(true);
     setShowEndOptions(true);
   };
 
   const handleFinishWithoutAd = () => {
+    if (coins === null || stats === null) return;
+
     const total = coins + earnedThisRound;
     setCoins(total);
-    updateStats({ coins: total, totalEarned: (stats?.totalEarned ?? 0) + earnedThisRound, streak: 0, level: 1 });
+
+    const earnedXP = calculateXP({
+      correctAnswers: earnedThisRound,
+      streak: stats.streak,
+      completed: true,
+    });
+
+    const totalXP = stats.xp + earnedXP;
+    const newProfileLevel = getProfileLevelFromXP(totalXP);
+
+    updateStats({
+      xp: totalXP,
+      profileLevel: newProfileLevel,
+      streak: newStreak,
+      level: newLevel,
+      totalEarned: stats.totalEarned + earnedThisRound,
+    });
+
     setShowEndOptions(true);
   };
 
@@ -142,6 +222,8 @@ export default function GameScreen(): React.ReactElement {
     setRoundKey(prev => prev + 1);
     setSelectedEmoji(null);
     setIsCorrectAnswer(null);
+    setContinueAttempts(0);
+    setRewardVideoUsed(false);
   };
 
   const handleGoHome = () => {
@@ -149,13 +231,31 @@ export default function GameScreen(): React.ReactElement {
     router.push('/home');
   };
 
+  if (coins === null || streak === null || level === null) {
+    return <Text style={{ color: '#fff', textAlign: 'center' }}>Cargando partida...</Text>;
+  }
+
+  const progressToNextLevel = Math.min((streak % 5), 5);
+  const progressPercent = Math.round((progressToNextLevel / 5) * 100);
+
   return (
     <View style={styles.container}>
-      <GameHeader avatarFile={avatarFile} frameFile={frameFile} nick={userNick} coins={coins} />
+      <GameHeader avatarFile={avatarFile} frameFile={frameFile} nick={userNick} level={level} coins={coins} />
+
+      {showLevelUpMessage && (
+        <View style={styles.levelUpMessage}>
+          <Text style={styles.levelUpText}>🎉 ¡Nivel alcanzado!</Text>
+        </View>
+      )}
 
       <View style={styles.status}>
         <Text style={styles.level}>Nivel {level}</Text>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+        </View>
+        <Text style={styles.progressText}>Progreso: {progressPercent}%</Text>
         <Text style={styles.streak}>Racha: {streak}</Text>
+        <Text style={styles.earned}>Ganadas esta ronda: {earnedThisRound} 🪙</Text>
       </View>
 
       <View style={styles.gameArea}>
@@ -194,7 +294,9 @@ export default function GameScreen(): React.ReactElement {
               ))}
             </View>
           </View>
+
         )}
+
       </View>
 
       <GameModal
@@ -210,6 +312,10 @@ export default function GameScreen(): React.ReactElement {
         onRestart={handleRestart}
         onGoHome={handleGoHome}
       />
+      <View style={styles.bannerPlaceholder}>
+        {/* Espacio reservado para el banner de anuncios */}
+      </View>
     </View>
+
   );
 }

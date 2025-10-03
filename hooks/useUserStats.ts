@@ -12,13 +12,17 @@ import { db } from '../firebase/config'; // tu Firestore exportado desde config.
 interface UserStats {
   uid: string;
   nick: string;
-  avatar?: string; 
-  frame?: string;  
+  avatar?: string;
+  frame?: string;
   coins: number;
   streak: number;
   level: number;
   totalEarned: number;
   lastPlayed: any;
+
+  // 🆕 Nuevos campos
+  xp: number;
+  profileLevel: number;
 }
 
 export function useUserStats() {
@@ -40,11 +44,13 @@ export function useUserStats() {
           const defaultStats: UserStats = {
             uid: user.uid,
             nick: 'Jugador123',
-            coins: 250,
+            coins: 50,
             streak: 0,
             level: 1,
             totalEarned: 0,
             lastPlayed: serverTimestamp(),
+            xp: 0, // Valor inicial de XP
+            profileLevel: 1, // Valor inicial de nivel de perfil
           };
           await setDoc(ref, defaultStats);
           setStats(defaultStats);

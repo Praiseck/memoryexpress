@@ -25,12 +25,12 @@ export const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     textAlign: 'center',
-    marginTop: 150,
+    marginTop: 400,
   },
   
   bannerPlaceholder: {
     height: 60, // espacio estimado para el banner
-    marginTop: 10,
+    marginTop: 0,
     backgroundColor: '#867b7bff', // color de fondo temporal
   },
 

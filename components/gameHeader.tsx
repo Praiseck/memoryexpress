@@ -8,6 +8,7 @@ interface Props {
   frameFile: string;
   nick: string;
   coins: number;
+  level: number;
 }
 
 const avatarMap: Record<string, any> = {
