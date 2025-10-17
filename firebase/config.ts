@@ -1,8 +1,12 @@
-import Constants from 'expo-constants';
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+// firebase/config.ts
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { initializeApp } from "firebase/app";
+import { initializeAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+// @ts-ignore
+import { getReactNativePersistence } from "firebase/auth";
 
-
+import Constants from "expo-constants";
 
 const extra = Constants.expoConfig?.extra ?? {};
 
@@ -16,4 +20,10 @@ const firebaseConfig = {
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);
+
+// ✅ Usa el helper oficial, no un objeto manual
+export const auth = initializeAuth(firebaseApp, {
+  persistence: getReactNativePersistence(AsyncStorage),
+});
+
 export const db = getFirestore(firebaseApp);

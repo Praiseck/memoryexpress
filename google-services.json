@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "401077237687",
+    "project_id": "memoriaapp-b270c",
+    "storage_bucket": "memoriaapp-b270c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401077237687:android:235ede606851435ec9da32",
+        "android_client_info": {
+          "package_name": "com.praiseck.memoryexpress"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAckQwwHOE-mzZ1cx9eGxBI_aLs6Q36Khw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

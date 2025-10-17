@@ -1,35 +1,59 @@
-import React from 'react';
+import React, { JSX } from 'react';
 import { Image, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { styles } from './gameHeader.styles'; // estilos separados
+import { avatarRegistry } from '../hooks/avatarRegistry';
+import { frameRegistry } from '../hooks/frameRegistry';
+import { styles } from './Styles/gameHeader.styles';
 
-interface Props {
+interface GameHeaderProps {
   avatarFile: string;
   frameFile: string;
   nick: string;
-  coins: number;
   level: number;
+  coins: number;
 }
 
-const avatarMap: Record<string, any> = {
-  'avataaars17.png': require('../assets/images/avatars/avataaars17.png'),
-};
+export function GameHeader({
+  avatarFile,
+  frameFile,
+  nick,
+  level,
+  coins,
+}: GameHeaderProps): JSX.Element {
+  const fallbackAvatar = 'avataaars17.png';
+  const fallbackFrame = 'free.png';
 
-const frameMap: Record<string, any> = {
-  'frame1.png': require('../assets/images/frames/frame1.png'),
-};
-
-export const GameHeader: React.FC<Props> = ({ avatarFile, frameFile, nick, coins }) => {
-  const insets = useSafeAreaInsets();
+  const avatarSource = avatarRegistry[avatarFile]?.source ?? avatarRegistry[fallbackAvatar].source;
+  const frameSource = frameRegistry[frameFile]?.source ?? frameRegistry[fallbackFrame].source;
+  const avatarSize = frameFile === 'frame_fire' ? 85 : 90;
 
   return (
-    <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-      <View style={styles.preview}>
-        <Image source={frameMap[frameFile]} style={styles.frame} />
-        <Image source={avatarMap[avatarFile]} style={styles.avatar} />
+    <View style={styles.header}>
+      {/* IZQUIERDA: Avatar + Marco + Nick */}
+      <View style={styles.left}>
+        <View style={styles.preview}>
+          <Image
+            source={avatarSource}
+            style={{
+              width: avatarSize,
+              height: avatarSize,
+              borderRadius: avatarSize / 2,
+              position: 'absolute',
+              zIndex: 1,
+            }}
+          />
+          <Image
+            source={frameSource}
+            style={[styles.frame, { position: 'absolute', zIndex: 2 }]}
+          />
+        </View>
+        <Text style={styles.nick}>{nick}</Text>
       </View>
-      <Text style={styles.nick}>{nick}</Text>
-      <Text style={styles.coins}>{coins} 🪙</Text>
+
+      {/* DERECHA: Monedas + Nivel */}
+      <View style={styles.right}>
+        <Text style={styles.coins}>🪙 {coins}</Text>
+        <Text style={styles.level}>Nivel: {level}</Text>
+      </View>
     </View>
   );
-};
+}

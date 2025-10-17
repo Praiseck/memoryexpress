@@ -1,14 +1,14 @@
 import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import React, { JSX, useEffect } from 'react';
+import { ImageBackground, StyleSheet, View } from 'react-native';
 
-export default function SplashScreen() {
+const SplashScreen: React.FC = (): JSX.Element => {
   useEffect(() => {
-    console.log('[SPLASH] Montado. Esperando 2 segundos...');
+    console.log('[SPLASH] Montado. Esperando 3 segundos...');
     const timer = setTimeout(() => {
       console.log('[SPLASH] Redirigiendo a /login');
       router.replace('/login');
-    }, 2000);
+    }, 3000);
 
     return () => {
       console.log('[SPLASH] Desmontado');
@@ -17,19 +17,30 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Image source={require('../assets/images/splash-icon.png')} style={styles.logo} />
-      <Text style={styles.text}>MemoryExpress</Text>
-    </View>
+    <ImageBackground
+      source={require('../assets/images/BG-splash.png')}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay} />
+    </ImageBackground>
   );
-}
+};
+
+export default SplashScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: '#1e1e1e',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    width: '100%',
   },
   logo: {
     width: 120,

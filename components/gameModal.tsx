@@ -1,6 +1,20 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Text, TouchableOpacity, View } from 'react-native';
-import { styles } from './gameModal.styles';
+import React, { JSX, useEffect, useRef } from 'react';
+import {
+  Animated,
+  Modal,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { styles } from './Styles/gameModal.styles';
+
+interface GameSummary {
+  xp: number;
+  coins: number;
+  streak: number;
+  bestStreak: number;
+  doubleReward: boolean;
+}
 
 interface Props {
   showRewardModal: boolean;
@@ -8,6 +22,7 @@ interface Props {
   showEndMenu: boolean;
   showEndOptions: boolean;
   earnedThisRound: number;
+  gameSummary: GameSummary | null;
   onContinueAd: () => void;
   onEndGame: () => void;
   onDoubleRewardAd: () => void;
@@ -22,14 +37,15 @@ export const GameModal: React.FC<Props> = ({
   showEndMenu,
   showEndOptions,
   earnedThisRound,
+  gameSummary,
   onContinueAd,
   onEndGame,
   onDoubleRewardAd,
   onFinishWithoutAd,
   onRestart,
   onGoHome,
-}) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+}): JSX.Element | null => {
+  const fadeAnim = useRef<Animated.Value>(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (showEndMenu && !showEndOptions) {
@@ -43,7 +59,6 @@ export const GameModal: React.FC<Props> = ({
     }
   }, [showEndMenu, showEndOptions]);
 
-  // Modal para continuar tras fallar
   if (showRewardModal && hasFailed && !showEndMenu) {
     return (
       <View style={styles.overlay}>
@@ -60,29 +75,47 @@ export const GameModal: React.FC<Props> = ({
     );
   }
 
-  // Modal de feedback final con animación
   if (showEndMenu && !showEndOptions) {
     return (
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.modal, { opacity: fadeAnim }]}>
-          <Text style={styles.modalText}>Has ganado {earnedThisRound} 🪙</Text>
-          <Text style={styles.modalText}>¿Quieres duplicarlas?</Text>
-          <TouchableOpacity onPress={onDoubleRewardAd}>
-            <Text style={styles.modalButton}>Ver video y duplicar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onFinishWithoutAd}>
-            <Text style={styles.modalButton}>Aceptar sin duplicar</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
+      <Modal visible={showEndMenu} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <Animated.View style={[styles.modal, { opacity: fadeAnim }]}>
+            <Text style={styles.modalText}>
+              Has ganado {earnedThisRound} 🪙
+            </Text>
+            <Text style={styles.modalText}>¿Quieres duplicarlas?</Text>
+            <TouchableOpacity onPress={onDoubleRewardAd}>
+              <Text style={styles.modalButton}>Ver video y duplicar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onFinishWithoutAd}>
+              <Text style={styles.modalButton}>Aceptar sin duplicar</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
     );
   }
 
-  // Menú final tras aceptar o duplicar
   if (showEndMenu && showEndOptions) {
     return (
       <View style={styles.overlay}>
         <View style={styles.modal}>
+          <Text style={styles.modalText}>🏁 Resumen de la partida</Text>
+          {gameSummary && (
+            <>
+              <Text style={styles.modalText}>🧠 XP ganado: {gameSummary.xp}</Text>
+              <Text style={styles.modalText}>🪙 Monedas obtenidas: {gameSummary.coins}</Text>
+              <Text style={styles.modalText}>🔥 Racha alcanzada: {gameSummary.streak}</Text>
+              <Text style={styles.modalText}>
+                🏅 {gameSummary.streak >= gameSummary.bestStreak
+                  ? '¡Nuevo récord de racha!'
+                  : `Mejor racha: ${gameSummary.bestStreak}`}
+              </Text>
+              <Text style={styles.modalText}>
+                🎬 Recompensa duplicada: {gameSummary.doubleReward ? 'Sí' : 'No'}
+              </Text>
+            </>
+          )}
           <Text style={styles.modalText}>¿Qué quieres hacer ahora?</Text>
           <View style={styles.endButtons}>
             <TouchableOpacity onPress={onRestart}>
