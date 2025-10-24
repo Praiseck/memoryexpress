@@ -1,3 +1,4 @@
+import { WortiseBanner } from '@wortise/react-native-sdk';
 import React, { JSX, useState } from 'react';
 import {
   Alert,
@@ -13,6 +14,7 @@ import { HomeHeader } from '../components/homeHeader';
 import { avatarRegistry } from '../hooks/avatarRegistry';
 import { frameRegistry } from '../hooks/frameRegistry';
 import { defaultAvatars, defaultFrames, useUserStats } from '../hooks/useUserStats';
+import { useWortiseRewarded } from '../hooks/useWortiseRewarded';
 import { styles } from '../screens/store.styles';
 
 const avatarOptions = Object.keys(avatarRegistry);
@@ -25,7 +27,9 @@ const dummyScale = new Animated.Value(1);
 
 export default function StoreScreen(): JSX.Element {
   const { stats, updateStats } = useUserStats();
-  const [videosWatched, setVideosWatched] = useState<number>(0);
+  const { showRewardedAd } = useWortiseRewarded();
+  const videosWatched = stats?.videosWatchedToday ?? 0;
+
   const [showAll, setShowAll] = useState<boolean>(false);
   const [expandAvatars, setExpandAvatars] = useState<boolean>(false);
   const [expandFrames, setExpandFrames] = useState<boolean>(false);
@@ -56,16 +60,6 @@ export default function StoreScreen(): JSX.Element {
     Alert.alert('¡Compra exitosa!', `Has desbloqueado un nuevo ${type}.`);
   };
 
-  const handleWatchVideo = () => {
-    const reward = videosWatched === 4 ? 20 : 5;
-    const newTotal = (stats?.coins ?? 0) + reward;
-
-    updateStats({ coins: newTotal });
-    setVideosWatched((prev) => (prev + 1) % 5);
-
-    Alert.alert('¡Gracias por ver!', `Has ganado ${reward} 🪙 por ver el video.`);
-  };
-
   if (!stats) return <Text style={styles.loading}>Cargando tienda...</Text>;
 
   const unlockedAvatars = stats.unlockedAvatars ?? defaultAvatars;
@@ -91,11 +85,11 @@ export default function StoreScreen(): JSX.Element {
           nick={stats.nick}
           coins={stats.coins ?? 0}
           coinsScale={dummyScale}
-          compact // <-- si tu HomeHeader acepta esta prop para reducir tamaño
+          compact
         />
 
         <View style={styles.rewardRow}>
-          <TouchableOpacity style={styles.videoButton} onPress={handleWatchVideo}>
+          <TouchableOpacity style={styles.videoButton} onPress={showRewardedAd}>
             <Text style={styles.videoText}>Ver video</Text>
           </TouchableOpacity>
           <Text style={styles.videoCounter}>🎬 {videosWatched}/5</Text>
@@ -105,7 +99,6 @@ export default function StoreScreen(): JSX.Element {
           <Text style={styles.switchLabel}>Mostrar todo</Text>
           <Switch value={showAll} onValueChange={setShowAll} />
         </View>
-
 
         <Text style={styles.sectionTitle}>🎭 Avatares</Text>
         <View style={styles.grid}>
@@ -171,9 +164,9 @@ export default function StoreScreen(): JSX.Element {
         )}
       </ScrollView>
 
-      {/* Barra representativa de AdMob */}
+      {/* ✅ Banner real de Wortise */}
       <View style={styles.adBanner}>
-        <Text style={styles.adText}>[Espacio reservado para AdMob Banner]</Text>
+        <WortiseBanner adUnitId="TU_ID_DE_BANNER" />
       </View>
     </View>
   );

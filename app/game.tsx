@@ -1,3 +1,4 @@
+import { WortiseBanner } from '@wortise/react-native-sdk';
 import { Audio } from 'expo-av';
 import { useRouter } from 'expo-router';
 import React, { JSX, useEffect, useMemo, useState } from 'react';
@@ -10,43 +11,14 @@ import { ProgressBar } from '../components/ProgressBar';
 import { SequenceDisplay } from '../components/SequenceDisplay';
 import { useGameLogic } from '../hooks/useGameLogic';
 import { useUserStats } from '../hooks/useUserStats';
+import { useWortiseRewarded } from '../hooks/useWortiseRewarded';
 import { styles } from '../screens/game.styles';
-
-const easyEmojis = ['😀', '🐶', '🍎', '🚗', '🎈', '🌞', '🏠', '📚'];
-const mediumEmojis = ['😃', '😄', '😅', '😆', '😂', '🤣', '😊', '😇'];
-const hardEmojis = ['🙂', '🙃', '😐', '😑', '😶', '😏', '😒', '😔'];
-
-interface GameConfig {
-  emojiPool: string[];
-  sequenceLength: number;
-  timeLimit: number;
-}
-
-function getGameConfig(streak: number): GameConfig {
-  if (streak >= 25) {
-    return {
-      emojiPool: hardEmojis,
-      sequenceLength: 4,
-      timeLimit: 3,
-    };
-  } else if (streak >= 10) {
-    return {
-      emojiPool: mediumEmojis,
-      sequenceLength: 4,
-      timeLimit: 4,
-    };
-  } else {
-    return {
-      emojiPool: easyEmojis,
-      sequenceLength: 3,
-      timeLimit: 5,
-    };
-  }
-}
 
 const GameScreen: React.FC = (): JSX.Element => {
   const router = useRouter();
   const { stats, updateStats } = useUserStats();
+  const { showRewardedAd } = useWortiseRewarded();
+  const gameLogic = useGameLogic();
 
   const [showEndMenu, setShowEndMenu] = useState(false);
   const [showEndOptions, setShowEndOptions] = useState(false);
@@ -75,17 +47,11 @@ const GameScreen: React.FC = (): JSX.Element => {
     };
   }, []);
 
-  const tempLogic = useGameLogic(getGameConfig(0));
-  const { streak } = tempLogic;
-
-  const { emojiPool, sequenceLength, timeLimit } = getGameConfig(streak);
-  const gameLogic = useGameLogic({ emojiPool, sequenceLength, timeLimit });
-
   const options = useMemo(() => {
-    const distractors = emojiPool.filter(e => !gameLogic.sequence.includes(e));
+    const distractors = gameLogic.emojiPool.filter(e => !gameLogic.sequence.includes(e));
     const randomDistractors = distractors.sort(() => 0.5 - Math.random()).slice(0, 3);
     return [gameLogic.missingEmoji, ...randomDistractors].sort(() => 0.5 - Math.random());
-  }, [gameLogic.sequence, gameLogic.missingEmoji, emojiPool]);
+  }, [gameLogic.sequence, gameLogic.missingEmoji, gameLogic.emojiPool]);
 
   const handleAnswerWithFeedback = async (emoji: string) => {
     const correct = emoji === gameLogic.missingEmoji;
@@ -117,7 +83,7 @@ const GameScreen: React.FC = (): JSX.Element => {
     setShowEndOptions(false);
     setShowFeedback(false);
     gameLogic.resetGame();
-    router.replace('/home');
+    router.replace('/homeScreen');
   };
 
   const setShowFeedback = gameLogic.setShowFeedback;
@@ -130,6 +96,7 @@ const GameScreen: React.FC = (): JSX.Element => {
   };
 
   const handleDoubleRewardFlow = async () => {
+    showRewardedAd();
     await gameLogic.handleDoubleCoins();
     setShowEndMenu(true);
     setShowEndOptions(true);
@@ -181,7 +148,10 @@ const GameScreen: React.FC = (): JSX.Element => {
           isCorrect={isCorrect}
         />
 
-        <View style={styles.banner} />
+        {/* ✅ Banner de Wortise */}
+        <View style={styles.banner}>
+          <WortiseBanner adUnitId="5ed6529d-721f-4a57-ac97-2a91dc72b614" />
+        </View>
 
         <GameModal
           showRewardModal={gameLogic.hasFailed && gameLogic.continueAttempts < 2}

@@ -1,3 +1,4 @@
+import { WortiseBanner } from '@wortise/react-native-sdk';
 import React, { JSX } from 'react';
 import {
   FlatList,
@@ -63,7 +64,10 @@ const RankingScreen: React.FC = (): JSX.Element => {
         }}
       />
 
-      <View style={styles.banner} />
+      {/* ✅ Banner de Wortise */}
+      <View style={styles.banner}>
+        <WortiseBanner adUnitId="5ed6529d-721f-4a57-ac97-2a91dc72b614" />
+      </View>
     </View>
   );
 };

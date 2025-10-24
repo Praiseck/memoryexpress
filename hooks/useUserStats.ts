@@ -35,6 +35,13 @@ export interface UserStats {
   lastLoginDate?: string; // Fecha del último inicio de sesión en formato 'YYYY-MM-DD'
   loginStreak?: number; // Racha de días consecutivos de inicio de sesión
   claimedToday?: boolean; // Si el usuario ha reclamado su recompensa diaria hoy
+  gamesPlayedToday: number,
+  bestStreakToday: number,
+  videosWatchedToday: number,
+  missionsCompletedToday: string[], // ['play', 'streak']
+  missionDaysCompleted: string[],   // ['2025-10-17', '2025-10-18', ...]
+  weeklyRewardClaimed: boolean,
+
 }
 
 interface UseUserStatsReturn {
@@ -76,6 +83,16 @@ export function useUserStats(): UseUserStatsReturn {
             xp: data.xp ?? 1,
             profileLevel: data.profileLevel ?? 1,
             lastLevelNotified: data.lastLevelNotified ?? 1,
+            // Campos adicionales para gestión de inicio de sesión diaria
+            lastLoginDate: data.lastLoginDate ?? null,
+            loginStreak: data.loginStreak ?? 0,
+            claimedToday: data.claimedToday ?? false,
+            gamesPlayedToday: data.gamesPlayedToday ?? 0,
+            bestStreakToday: data.bestStreakToday ?? 0,
+            videosWatchedToday: data.videosWatchedToday ?? 0,
+            missionsCompletedToday: data.missionsCompletedToday ?? [],
+            missionDaysCompleted: data.missionDaysCompleted ?? [],
+            weeklyRewardClaimed: data.weeklyRewardClaimed ?? false,
           };
 
           // ✅ Mostrar mensaje de subida de nivel solo una vez
@@ -106,6 +123,12 @@ export function useUserStats(): UseUserStatsReturn {
             lastLoginDate: '2025-10-16',
             loginStreak: 1,
             claimedToday: false,
+            gamesPlayedToday: 0,
+            bestStreakToday: 0,
+            videosWatchedToday: 0,
+            missionsCompletedToday: [],
+            missionDaysCompleted: [],
+            weeklyRewardClaimed: false,
           };
           await setDoc(ref, {
             ...defaultStats,
@@ -156,6 +179,16 @@ export function useUserStats(): UseUserStatsReturn {
         xp: data.xp ?? 1,
         profileLevel: data.profileLevel ?? 1,
         lastLevelNotified: data.lastLevelNotified ?? 1,
+        // Campos adicionales para gestión de inicio de sesión diaria
+        lastLoginDate: data.lastLoginDate ?? null,
+        loginStreak: data.loginStreak ?? 0,
+        claimedToday: data.claimedToday ?? false,
+        gamesPlayedToday: data.gamesPlayedToday ?? 0,
+        bestStreakToday: data.bestStreakToday ?? 0,
+        videosWatchedToday: data.videosWatchedToday ?? 0,
+        missionsCompletedToday: data.missionsCompletedToday ?? [],
+        missionDaysCompleted: data.missionDaysCompleted ?? [],
+        weeklyRewardClaimed: data.weeklyRewardClaimed ?? false,
       };
       setStats(reloadedStats);
     }

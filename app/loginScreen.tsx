@@ -59,7 +59,7 @@ const LoginScreen: React.FC = (): JSX.Element => {
       const snap = await getDoc(ref);
 
       if (snap.exists()) {
-        router.replace('/home');
+        router.replace('/homeScreen');
       } else {
         const nickname = await generateUniqueNickname();
 
@@ -82,7 +82,7 @@ const LoginScreen: React.FC = (): JSX.Element => {
         });
 
         await updateProfile(user, { displayName: nickname });
-        router.replace('/home');
+        router.replace('/homeScreen');
       }
     });
 

@@ -32,9 +32,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 60,
   },
-  banner: {
-    height: 60,
-    backgroundColor: '#ada7a7ff',
+  adBanner: {
+    height: 50,
     width: '100%',
     position: 'absolute',
     bottom: 0,

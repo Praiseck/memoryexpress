@@ -27,8 +27,8 @@ export const HomeActions: React.FC = (): JSX.Element => {
         <Text style={styles.text}>📊 Ranking</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={() => console.log('Volumen')}>
-        <Text style={styles.text}>🔊 Volumen</Text>
+      <TouchableOpacity onPress={() => router.push('/missions')} style={styles.button}>
+        <Text style={styles.text}>📆 Misiones</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleLogout}>

@@ -1,3 +1,4 @@
+import { WortiseBanner } from '@wortise/react-native-sdk';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { JSX, useEffect, useRef, useState } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
@@ -81,7 +82,10 @@ const HomeScreen: React.FC = (): JSX.Element => {
         <HomeActions />
       </View>
 
-      <View style={styles.banner} />
+      {/* ✅ Banner de Wortise */}
+      <View style={styles.adBanner}>
+        <WortiseBanner adUnitId="5ed6529d-721f-4a57-ac97-2a91dc72b614" />
+      </View>
 
       <DailyRewardModal
         visible={showRewardModal}

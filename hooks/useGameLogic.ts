@@ -1,6 +1,23 @@
+import dayjs from 'dayjs';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
+import { db } from '../firebase/config';
 import { useFinalizeGame } from './useFinalizeGame';
 import { useUserStats } from './useUserStats';
+
+const easyEmojis = ['😀', '🐶', '🍎', '🚗', '🎈', '🌞', '🏠', '📚'];
+const mediumEmojis = ['😃', '😄', '😅', '😆', '😂', '🤣', '😊', '😇'];
+const hardEmojis = ['🙂', '🙃', '😐', '😑', '😶', '😏', '😒', '😔'];
+
+function getGameConfig(streak: number) {
+  if (streak >= 25) {
+    return { emojiPool: hardEmojis, sequenceLength: 4, timeLimit: 3 };
+  } else if (streak >= 10) {
+    return { emojiPool: mediumEmojis, sequenceLength: 4, timeLimit: 4 };
+  } else {
+    return { emojiPool: easyEmojis, sequenceLength: 3, timeLimit: 5 };
+  }
+}
 
 function generateSequence(pool: string[], count: number): string[] {
   return [...pool].sort(() => 0.5 - Math.random()).slice(0, count);
@@ -9,12 +26,6 @@ function generateSequence(pool: string[], count: number): string[] {
 function pickMissingEmoji(sequence: string[]): string {
   return sequence[Math.floor(Math.random() * sequence.length)];
 }
-
-type GameLogicParams = {
-  emojiPool: string[];
-  sequenceLength: number;
-  timeLimit: number;
-};
 
 interface GameSummary {
   xp: number;
@@ -27,6 +38,7 @@ interface GameSummary {
 interface GameLogicReturn {
   level: number;
   streak: number;
+  emojiPool: string[];
   sequence: string[];
   missingEmoji: string;
   showQuestion: boolean;
@@ -44,31 +56,28 @@ interface GameLogicReturn {
   setShowFeedback: (value: boolean) => void;
 }
 
-export function useGameLogic({
-  emojiPool,
-  sequenceLength,
-  timeLimit,
-}: GameLogicParams): GameLogicReturn {
+export function useGameLogic(): GameLogicReturn {
   const { finalizeGame } = useFinalizeGame();
   const { stats } = useUserStats();
 
-  const [streak, setStreak] = useState<number>(0);
-  const [earnedThisRound, setEarnedThisRound] = useState<number>(0);
-
+  const [streak, setStreak] = useState(0);
+  const [earnedThisRound, setEarnedThisRound] = useState(0);
   const [sequence, setSequence] = useState<string[]>([]);
-  const [missingEmoji, setMissingEmoji] = useState<string>('');
-  const [showQuestion, setShowQuestion] = useState<boolean>(false);
-  const [timeLeft, setTimeLeft] = useState<number>(timeLimit);
-  const [hasFailed, setHasFailed] = useState<boolean>(false);
-  const [continueAttempts, setContinueAttempts] = useState<number>(0);
-  const [showFeedback, setShowFeedback] = useState<boolean>(false);
-  const [round, setRound] = useState<number>(0);
+  const [missingEmoji, setMissingEmoji] = useState('');
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(5);
+  const [hasFailed, setHasFailed] = useState(false);
+  const [continueAttempts, setContinueAttempts] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [round, setRound] = useState(0);
   const [gameSummary, setGameSummary] = useState<GameSummary | null>(null);
+  const { emojiPool, sequenceLength, timeLimit } = getGameConfig(streak);
 
   const maxContinues = 2;
   const level = Math.floor(streak / 5) + 1;
 
-  const startNewRound = (): void => {
+  const startNewRound = () => {
+    const { emojiPool, sequenceLength, timeLimit } = getGameConfig(streak);
     const selected = generateSequence(emojiPool, sequenceLength);
     const missing = pickMissingEmoji(selected);
 
@@ -81,8 +90,7 @@ export function useGameLogic({
 
   useEffect(() => {
     startNewRound();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sequenceLength, timeLimit, continueAttempts, round]);
+  }, [streak, continueAttempts, round]);
 
   useEffect(() => {
     if (timeLeft > 0 && !showQuestion) {
@@ -99,7 +107,7 @@ export function useGameLogic({
     return 10;
   }
 
-  function handleAnswer(emoji: string): void {
+  function handleAnswer(emoji: string) {
     if (hasFailed || showFeedback) return;
 
     if (emoji === missingEmoji) {
@@ -112,19 +120,24 @@ export function useGameLogic({
     }
   }
 
-  function handleContinueAd(): void {
-    if (continueAttempts < maxContinues) {
+  async function handleContinueAd() {
+    if (continueAttempts < maxContinues && stats?.uid) {
       setContinueAttempts((prev) => prev + 1);
       setHasFailed(false);
       setRound((prev) => prev + 1);
+
+      try {
+        await updateDoc(doc(db, 'users', stats.uid), {
+          videosWatchedToday: (stats.videosWatchedToday ?? 0) + 1,
+        });
+      } catch (error) {
+        console.error('[GAME LOGIC] Error al registrar video visto:', error);
+      }
     }
   }
 
-  async function finalizeAndEndGame(coins: number, doubleReward: boolean): Promise<void> {
-    if (!stats) {
-      console.warn('[GAME LOGIC] No se puede generar resumen: stats no disponible');
-      return;
-    }
+  async function finalizeAndEndGame(coins: number, doubleReward: boolean) {
+    if (!stats) return;
 
     const correctAnswers = Math.floor(coins / 2);
     const baseXP = correctAnswers * 2;
@@ -141,15 +154,20 @@ export function useGameLogic({
       doubleReward,
     });
 
-    setGameSummary({
-      xp: finalXP,
-      coins,
-      streak,
-      bestStreak: Math.max(streak, stats.bestStreak ?? 0),
-      doubleReward,
-    });
+    try {
+      const userRef = doc(db, 'users', stats.uid);
+      const today = dayjs().format('YYYY-MM-DD');
 
-    console.log('[GAME LOGIC] Resumen generado:', {
+      await updateDoc(userRef, {
+        gamesPlayedToday: (stats.gamesPlayedToday ?? 0) + 1,
+        bestStreakToday: Math.max(streak, stats.bestStreakToday ?? 0),
+        lastLoginDate: today,
+      });
+    } catch (error) {
+      console.error('[GAME LOGIC] Error al actualizar stats diarios:', error);
+    }
+
+    setGameSummary({
       xp: finalXP,
       coins,
       streak,
@@ -160,17 +178,17 @@ export function useGameLogic({
     setShowFeedback(true);
   }
 
-  function handleEndGame(): void {
+  function handleEndGame() {
     finalizeAndEndGame(earnedThisRound, false);
   }
 
-  function handleDoubleCoins(): void {
+  function handleDoubleCoins() {
     const doubled = earnedThisRound * 2;
     setEarnedThisRound(doubled);
     finalizeAndEndGame(doubled, true);
   }
 
-  function resetGame(): void {
+  function resetGame() {
     setStreak(0);
     setEarnedThisRound(0);
     setHasFailed(false);
@@ -190,6 +208,7 @@ export function useGameLogic({
   return {
     level,
     streak,
+    emojiPool,
     sequence,
     missingEmoji,
     showQuestion,

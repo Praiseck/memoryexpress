@@ -1,0 +1,30 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+  repositories {
+    maven { url "https://sdk.wortise.com/android/releases" } // ✅ Repositorio prioritario
+    google()
+    mavenCentral()
+  }
+  dependencies {
+    classpath("com.android.tools.build:gradle:8.0.2") // ✅ Versión explícita
+    classpath("com.facebook.react:react-native-gradle-plugin")
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0") // ✅ Versión explícita
+  }
+}
+
+allprojects {
+  repositories {
+    maven { url "https://sdk.wortise.com/android/releases" } // ✅ Repetimos aquí también
+    google()
+    mavenCentral()
+    maven { url "https://www.jitpack.io" }
+    maven { url "https://maven.wortise.com/artifactory/public" }
+    maven { url "https://android-sdk.is.com/" }
+    maven { url "https://artifact.bytedance.com/repository/pangle" }
+    maven { url "https://cboost.jfrog.io/artifactory/chartboost-ads/" }
+  }
+}
+
+apply plugin: "expo-root-project"
+apply plugin: "com.facebook.react.rootproject"

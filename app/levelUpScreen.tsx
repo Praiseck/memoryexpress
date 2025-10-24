@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import React, { JSX } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
-import { frameMap } from '../hooks/frameRegistry';
+import { frameRegistry } from '../hooks/frameRegistry';
 import { styles } from '../screens/levelUp.styles';
 
 
@@ -18,8 +18,8 @@ export default function LevelUpScreen(): JSX.Element {
       <Text style={styles.title}>🎉 ¡Subiste al nivel {level}!</Text>
 
       <Text style={styles.subtitle}>Has desbloqueado un nuevo marco:</Text>
-      {typeof rewardFrame === 'string' && frameMap[rewardFrame] ? (
-        <Image source={frameMap[rewardFrame]} style={styles.frame} />
+      {typeof rewardFrame === 'string' && frameRegistry[rewardFrame] ? (
+        <Image source={frameRegistry[rewardFrame].source} style={styles.frame} />
       ) : (
         <Text style={styles.noReward}>Este nivel no tiene recompensa visual</Text>
       )}
